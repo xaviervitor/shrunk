@@ -8,7 +8,7 @@ BEGIN
   BEGIN
     BLOCK "040904E4"	// English US
     BEGIN
-      VALUE "FileDescription", "Shrunk (https://vitassos.itch.io/shrunk)"
+      VALUE "FileDescription", "Shrunk"
       VALUE "FileVersion", "1.0.0"
       VALUE "InternalName", "shrunk"
       VALUE "ProductName", "shrunk"

@@ -11,7 +11,7 @@ typedef struct ThreadList {
 
 ThreadList* ThreadList_New();
 
-void ThreadList_Destroy(ThreadList* self);
+void ThreadList_Delete(ThreadList* self);
 
 void ThreadList_Add(ThreadList* self, pthread_t value);
 

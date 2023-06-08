@@ -19,8 +19,7 @@ void* loadSoundThread(void* _threadInfo) {
     return NULL;
 }
 
-void SoundPool_LoadSound(ThreadList* threads, SoundPool* self, const char* fileName) {
-    Wave wave = LoadWave(fileName);
+void SoundPool_LoadSoundFromWave(SoundPool* self, Wave wave, ThreadList* threads) {
     self->lastPlayed = -1;
     for (int i = 0 ; i < SOUNDPOOL_LENGTH ; i++) {
         ThreadInfo* threadInfo = (ThreadInfo*) malloc(sizeof(ThreadInfo));

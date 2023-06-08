@@ -9,6 +9,7 @@
 #define LEVEL_RANGES_LENGTH 9
 #define COLOR_PALETTES_LENGTH 5
 #define KALIMBA_SOUNDS_LENGTH 3
+#define LOADED_WAVES_LENGTH (KALIMBA_SOUNDS_LENGTH + 1)
 
 #define MAX_LEVEL 40
 
@@ -55,12 +56,18 @@ int main(void) {
     InitAudioDevice();
     SoundPool kalimbaSoundPools[KALIMBA_SOUNDS_LENGTH];
     SoundPool echoSoundPool;
+
+    Wave loadedWaves[LOADED_WAVES_LENGTH];
     ThreadList* threads = ThreadList_New();
-    for (int i = 0 ; i < KALIMBA_SOUNDS_LENGTH ; i++) {
-        SoundPool_LoadSound(threads, &kalimbaSoundPools[i], TextFormat("resources/sounds/Kalimba-C%d.wav", (i + 4)));
+    int waveIndex = 0;
+    while (waveIndex < KALIMBA_SOUNDS_LENGTH) {
+        loadedWaves[waveIndex] = LoadWave(TextFormat("resources/sounds/Kalimba-C%d.wav", (waveIndex + 4)));
+        SoundPool_LoadSoundFromWave(&kalimbaSoundPools[waveIndex], loadedWaves[waveIndex], threads);
+        waveIndex++;
     }
-    SoundPool_LoadSound(threads, &echoSoundPool, "resources/sounds/Echo.wav");
-    
+    loadedWaves[waveIndex] = LoadWave("resources/sounds/Echo.wav");
+    SoundPool_LoadSoundFromWave(&echoSoundPool, loadedWaves[waveIndex], threads);
+
     SetWindowState(FLAG_VSYNC_HINT);
     SetExitKey(0);
     HideCursor();
@@ -75,11 +82,11 @@ int main(void) {
 
     Texture2D circleTexture = LoadTexture("resources/textures/circle.png");
     SetTextureFilter(circleTexture, TEXTURE_FILTER_TRILINEAR);
-    Circle playerCircle = { .texture = circleTexture };
-    Circle targetCircle = { .texture = circleTexture };
+    Circle playerCircle = (Circle) { texture: circleTexture };
+    Circle targetCircle = (Circle) { texture: circleTexture };
     
     ThreadList_Join(threads);
-    ThreadList_Destroy(threads);
+    ThreadList_Delete(threads);
     Kalimba_Init(kalimbaSoundPools, &echoSoundPool);
     Game game;
     startGame(&game, &playerCircle, &targetCircle);
@@ -139,9 +146,12 @@ int main(void) {
     for (int i = 0 ; i < KALIMBA_SOUNDS_LENGTH ; i++) {
         SoundPool_UnloadSound(&kalimbaSoundPools[i]);
     }
-
     SoundPool_UnloadSound(&echoSoundPool);
 
+    for (int i = 0 ; i < LOADED_WAVES_LENGTH ; i++) {
+        UnloadWave(loadedWaves[i]);
+    }
+    
     UnloadTexture(circleTexture);
     
     UnloadFont(font);

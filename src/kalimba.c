@@ -122,13 +122,14 @@ void Kalimba_InitNotes(SoundPool octaveSoundPools[]) {
     int notesArrayIndex = 0;
     for (int octaveIndex = 0 ; octaveIndex < OCTAVES ; octaveIndex++) {
         for (int noteIndex = 0 ; noteIndex < NOTES_IN_OCTAVE ; noteIndex++) {
-            notes[notesArrayIndex++] = (Note) { 
+            notes[notesArrayIndex] = (Note) { 
                 soundPool: &octaveSoundPools[octaveIndex], 
                 pitch: getPitch(noteIndex) 
             };
+            notesArrayIndex++;
         }
     }
-    // Do7
+    // Do7, 2.0x of Do6
     notes[notesArrayIndex] = (Note) { soundPool: &octaveSoundPools[OCTAVES - 1], pitch: 2.0f };
 }
 

@@ -10,7 +10,7 @@ ThreadList* ThreadList_New() {
     return self;
 }
 
-void ThreadList_Destroy(ThreadList* self) {
+void ThreadList_Delete(ThreadList* self) {
     free(self->array);
     free(self);
 }

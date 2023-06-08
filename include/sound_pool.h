@@ -13,7 +13,7 @@ typedef struct {
     int lastPlayed;
 } SoundPool;
 
-void SoundPool_LoadSound(ThreadList* threads, SoundPool* soundPool, const char* fileName);
+void SoundPool_LoadSoundFromWave(SoundPool* self, Wave wave, ThreadList* threads);
 
 void SoundPool_UnloadSound(SoundPool* soundPool);
 
