@@ -20,8 +20,8 @@
 #define MAX_LEVEL 40
 
 Dimensions screenDimensions = (Dimensions) { 
-    width: SCREEN_WIDTH, 
-    height: SCREEN_HEIGHT
+    .width = SCREEN_WIDTH, 
+    .height = SCREEN_HEIGHT
 };
 
 typedef enum {
@@ -108,8 +108,8 @@ void Init() {
 
     circleTexture = LoadTexture("resources/textures/circle.png");
     SetTextureFilter(circleTexture, TEXTURE_FILTER_TRILINEAR);
-    game.playerCircle = (Circle) { texture: circleTexture };
-    game.targetCircle = (Circle) { texture: circleTexture };
+    game.playerCircle = (Circle) { .texture = circleTexture };
+    game.targetCircle = (Circle) { .texture = circleTexture };
     
     ThreadList_Join(threads);
     ThreadList_Delete(threads);
@@ -166,7 +166,7 @@ void UpdateDrawFrame() {
         drawCircle(game.playerCircle);
         drawCircle(game.targetCircle);
         Vector2 textSize = MeasureTextEx(bigFont, TextFormat("%d", game.level), bigFontSize, 0);
-        Vector2 textPosition = (Vector2) { x: screenDimensions.width / 2 - textSize.x / 2, y: screenDimensions.height / 2 - textSize.y / 2};
+        Vector2 textPosition = (Vector2) { .x = screenDimensions.width / 2 - textSize.x / 2, .y = screenDimensions.height / 2 - textSize.y / 2};
         Color textColor = ColorAlpha(game.currentColorPalette.foreground, 0.125f);
         DrawTextEx(bigFont, TextFormat("%d", game.level), textPosition, bigFontSize, 0, textColor);
         EndDrawing();
@@ -179,7 +179,7 @@ void UpdateDrawFrame() {
         ClearBackground(game.currentColorPalette.background);
         drawCircle(game.playerCircle);
         Vector2 textSize = MeasureTextEx(font, game.endGameText, fontSize, 0);
-        Vector2 textPosition = (Vector2) { x: screenDimensions.width / 2 - textSize.x / 2, y: screenDimensions.height / 2 - textSize.y / 2};
+        Vector2 textPosition = (Vector2) { .x = screenDimensions.width / 2 - textSize.x / 2, .y = screenDimensions.height / 2 - textSize.y / 2};
         Color textColor = ColorAlpha(game.currentColorPalette.foreground, 0.75f);
         DrawTextEx(font, game.endGameText, textPosition, fontSize, 0, textColor);
         EndDrawing();
@@ -197,7 +197,7 @@ void startGame() {
     
     game.targetCircle.radius = circleRadius;
     game.targetCircle.color = ColorAlpha(game.currentColorPalette.foreground, 0.25f);
-    game.targetCircle.position = (Vector2) { x: screenDimensions.width / 2, y: screenDimensions.height / 2};
+    game.targetCircle.position = (Vector2) { .x = screenDimensions.width / 2, .y = screenDimensions.height / 2};
 
     game.shrinkingSpeed = 2.0f;
 
@@ -226,8 +226,8 @@ void advanceLevel() {
     game.targetCircle.color = ColorAlpha(game.currentColorPalette.foreground, 0.25f);
     game.targetCircle.radius = randomRadius;
     game.targetCircle.position = (Vector2) {
-        x: GetRandomValue(0, screenDimensions.width), 
-        y: GetRandomValue(0, screenDimensions.height)
+        .x = GetRandomValue(0, screenDimensions.width), 
+        .y = GetRandomValue(0, screenDimensions.height)
     };
 }
 
@@ -245,15 +245,15 @@ void endGame(GameState newGameState) {
 
 void initColorPalettes() {
     // 01 - 10: Green
-    colorPalettes[0] = (ColorPalette) { background: GetColor(0x496F5DFF), foreground: GetColor(0xC0DFA1FF) };
+    colorPalettes[0] = (ColorPalette) { .background = GetColor(0x496F5DFF), .foreground = GetColor(0xC0DFA1FF) };
     // 11 - 20: Brown
-    colorPalettes[1] = (ColorPalette) { background: GetColor(0xA88383FF), foreground: GetColor(0xFFF3EDFF) };
+    colorPalettes[1] = (ColorPalette) { .background = GetColor(0xA88383FF), .foreground = GetColor(0xFFF3EDFF) };
     // 21 - 30: Julia
-    colorPalettes[2] = (ColorPalette) { background: GetColor(0xAB4E68FF), foreground: GetColor(0xFFF9E7FF) };
+    colorPalettes[2] = (ColorPalette) { .background = GetColor(0xAB4E68FF), .foreground = GetColor(0xFFF9E7FF) };
     // 31 - 39: Moon
-    colorPalettes[3] = (ColorPalette) { background: GetColor(0x39304AFF), foreground: GetColor(0xEDD2E0FF) };
+    colorPalettes[3] = (ColorPalette) { .background = GetColor(0x39304AFF), .foreground = GetColor(0xEDD2E0FF) };
     // 40: Moon
-    colorPalettes[4] = (ColorPalette) { background: GetColor(0x39304AFF), foreground: GetColor(0xEDD2E0FF) };
+    colorPalettes[4] = (ColorPalette) { .background = GetColor(0x39304AFF), .foreground = GetColor(0xEDD2E0FF) };
 }
 
 void initLevelRadiusRanges() {

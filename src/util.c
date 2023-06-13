@@ -6,9 +6,9 @@
 #include "raylib.h"
 
 void drawCircle(Circle circle) {
-    Rectangle source = (Rectangle) { x: 0.0f, y: 0.0f, width: circle.texture.width, height: circle.texture.height };
-    Rectangle dest = (Rectangle) { x: circle.position.x, y: circle.position.y, width: circle.radius * 2, height: circle.radius * 2 };
-    Vector2 origin = (Vector2) { x: circle.radius, y: circle.radius };
+    Rectangle source = (Rectangle) { .x = 0.0f, .y = 0.0f, .width = circle.texture.width, .height = circle.texture.height };
+    Rectangle dest = (Rectangle) { .x = circle.position.x, .y = circle.position.y, .width = circle.radius * 2, .height = circle.radius * 2 };
+    Vector2 origin = (Vector2) { .x = circle.radius, .y = circle.radius };
     DrawTexturePro(circle.texture, source, dest, origin, 0, circle.color);
 }
 

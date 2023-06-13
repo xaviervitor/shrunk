@@ -117,14 +117,14 @@ void RandomNotePlayer_InitNotes(SoundPool octavesSoundPools[]) {
     for (int octaveIndex = 0 ; octaveIndex < OCTAVES ; octaveIndex++) {
         for (int noteIndex = 0 ; noteIndex < NOTES_IN_OCTAVE ; noteIndex++) {
             notes[notesArrayIndex] = (Note) { 
-                soundPool: &octavesSoundPools[octaveIndex], 
-                pitch: calculatePitch(noteIndex) 
+                .soundPool = &octavesSoundPools[octaveIndex], 
+                .pitch = calculatePitch(noteIndex) 
             };
             notesArrayIndex++;
         }
     }
     // Do7, 2.0x of Do6
-    notes[notesArrayIndex] = (Note) { soundPool: &octavesSoundPools[OCTAVES - 1], pitch: 2.0f };
+    notes[notesArrayIndex] = (Note) { .soundPool = &octavesSoundPools[OCTAVES - 1], .pitch = 2.0f };
 }
 
 void RandomNotePlayer_InitModes() {
