@@ -1,4 +1,4 @@
-#include "kalimba.h"
+#include "random_note_player.h"
 
 #include <stdbool.h>
 #include <math.h>
@@ -13,9 +13,9 @@
 #define MODES_LENGTH 4
 #define MODE_NOTES_LENGTH 22
 
-void Kalimba_PlayNote(Note note);
-void Kalimba_InitNotes(SoundPool octaveSoundPools[]);
-void Kalimba_InitModes(void);
+void RandomNotePlayer_PlayNote(Note note);
+void RandomNotePlayer_InitNotes(SoundPool octavesSoundPools[]);
+void RandomNotePlayer_InitModes(void);
 
 typedef enum {
     NOTE_DO_4 = 0,
@@ -62,23 +62,21 @@ typedef enum {
 
 Note notes[NOTES_LENGTH];
 Note modes[MODES_LENGTH][MODE_NOTES_LENGTH];
-SoundPool* echoSoundPool;
 
 Note* currentMode;
 float previousNote;
 
-void Kalimba_Init(SoundPool kalimbaSoundPools[], SoundPool* _echoSoundPool) {
-    Kalimba_InitNotes(kalimbaSoundPools);
-    Kalimba_InitModes();
-    echoSoundPool = _echoSoundPool;
+void RandomNotePlayer_Init(SoundPool octavesSoundPools[]) {
+    RandomNotePlayer_InitNotes(octavesSoundPools);
+    RandomNotePlayer_InitModes();
 }
 
-void Kalimba_Reset() {
-    Kalimba_RandomizeMode();
+void RandomNotePlayer_Reset() {
+    RandomNotePlayer_RandomizeMode();
     previousNote = NOTE_DO_4;
 }
 
-void Kalimba_Play(int level, int maxLevel) {
+Note RandomNotePlayer_GenerateNote(int level, int maxLevel) {
     float currentNote = previousNote;
     bool playHardcodedNotes = level > 36;
     float min = easeInCirc((float) level / (float) maxLevel) * (MODE_NOTES_LENGTH - 1);
@@ -98,16 +96,12 @@ void Kalimba_Play(int level, int maxLevel) {
         }
     }
 
-    Kalimba_PlayNote(currentMode[(int) round(currentNote)]);
+    Note nextNote = currentMode[(int) round(currentNote)];
     previousNote = currentNote;
+    return nextNote;
 }
 
-void Kalimba_PlayNote(Note note) {
-    SoundPool_PlaySound(note.soundPool, note.pitch);
-    SoundPool_PlaySound(echoSoundPool, note.pitch);
-}
-
-void Kalimba_RandomizeMode() {
+void RandomNotePlayer_RandomizeMode() {
     Note* previousMode = currentMode;
     do {
         currentMode = (Note*) &modes[GetRandomValue(0, MODES_LENGTH - 1)];
@@ -118,22 +112,22 @@ inline float calculatePitch(int note) {
     return pow(2, ((float) note / (float) 12));
 }
 
-void Kalimba_InitNotes(SoundPool octaveSoundPools[]) {
+void RandomNotePlayer_InitNotes(SoundPool octavesSoundPools[]) {
     int notesArrayIndex = 0;
     for (int octaveIndex = 0 ; octaveIndex < OCTAVES ; octaveIndex++) {
         for (int noteIndex = 0 ; noteIndex < NOTES_IN_OCTAVE ; noteIndex++) {
             notes[notesArrayIndex] = (Note) { 
-                soundPool: &octaveSoundPools[octaveIndex], 
+                soundPool: &octavesSoundPools[octaveIndex], 
                 pitch: calculatePitch(noteIndex) 
             };
             notesArrayIndex++;
         }
     }
     // Do7, 2.0x of Do6
-    notes[notesArrayIndex] = (Note) { soundPool: &octaveSoundPools[OCTAVES - 1], pitch: 2.0f };
+    notes[notesArrayIndex] = (Note) { soundPool: &octavesSoundPools[OCTAVES - 1], pitch: 2.0f };
 }
 
-void Kalimba_InitModes() {
+void RandomNotePlayer_InitModes() {
     enum {
         MODE_IONIAN = 0,
         MODE_DORIAN,
