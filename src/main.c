@@ -45,6 +45,8 @@ ColorPalette colorPalettes[COLOR_PALETTES_LENGTH];
 
 int main(void) {
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Shrunk!");
+    SetWindowState(FLAG_VSYNC_HINT);
+    screenDimensions = toggleGameFullscreen();
     
     // Draw once to change background to the green background
     // color instead of white
@@ -67,9 +69,6 @@ int main(void) {
     }
     loadedWaves[waveIndex] = LoadWave("resources/sounds/Echo.wav");
     SoundPool_LoadSoundFromWave(&echoSoundPool, loadedWaves[waveIndex], threads);
-
-    SetWindowState(FLAG_VSYNC_HINT);
-    SetExitKey(0);
     HideCursor();
     initRandom();
     initColorPalettes();
