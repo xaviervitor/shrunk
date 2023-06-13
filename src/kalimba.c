@@ -114,17 +114,17 @@ void Kalimba_RandomizeMode() {
     } while (currentMode == previousMode);
 }
 
-void Kalimba_InitNotes(SoundPool octaveSoundPools[]) {
-    float getPitch(int noteIndex) {
-        return pow(2, ((float) noteIndex / (float) 12));
-    }
+inline float calculatePitch(int note) {
+    return pow(2, ((float) note / (float) 12));
+}
 
+void Kalimba_InitNotes(SoundPool octaveSoundPools[]) {
     int notesArrayIndex = 0;
     for (int octaveIndex = 0 ; octaveIndex < OCTAVES ; octaveIndex++) {
         for (int noteIndex = 0 ; noteIndex < NOTES_IN_OCTAVE ; noteIndex++) {
             notes[notesArrayIndex] = (Note) { 
                 soundPool: &octaveSoundPools[octaveIndex], 
-                pitch: getPitch(noteIndex) 
+                pitch: calculatePitch(noteIndex) 
             };
             notesArrayIndex++;
         }
