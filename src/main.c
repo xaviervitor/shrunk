@@ -6,23 +6,12 @@
 #include "sound_pool.h"
 #include "thread_list.h"
 
-// #define PLATFORM_WEB
-
-#if defined(PLATFORM_WEB)
-    #include <emscripten/emscripten.h>
-#endif
-
 #define LEVEL_RANGES_LENGTH 9
 #define COLOR_PALETTES_LENGTH 5
 #define KALIMBA_SOUNDS_LENGTH 3
 #define LOADED_WAVES_LENGTH (KALIMBA_SOUNDS_LENGTH + 1)
 
 #define MAX_LEVEL 40
-
-Dimensions screenDimensions = (Dimensions) { 
-    .width = SCREEN_WIDTH, 
-    .height = SCREEN_HEIGHT
-};
 
 typedef enum {
     GAMESTATE_PLAYING,
@@ -36,7 +25,6 @@ typedef struct Game {
     double gameStartTime;
     int level;
     ColorPalette currentColorPalette;
-    const char* endGameText;
     Circle playerCircle;
     Circle targetCircle;
     float shrinkingSpeed;
@@ -52,36 +40,40 @@ void endGame(GameState won);
 void initLevelRadiusRanges(void);
 void initColorPalettes(void);
     
+Dimensions screenDimensions = (Dimensions) { 
+    .width = SCREEN_WIDTH, 
+    .height = SCREEN_HEIGHT
+};
+int fontSizeMedium = 72;
+int fontSizeBig = 432; // 72 * 6
 Game game;
 Range levelCircleRadiusRanges[LEVEL_RANGES_LENGTH];
 ColorPalette colorPalettes[COLOR_PALETTES_LENGTH];
 SoundPool kalimbaSoundPools[KALIMBA_SOUNDS_LENGTH];
 SoundPool echoSoundPool;
 Texture2D circleTexture;
-int fontSize;
-int bigFontSize;
-Font font;
-Font bigFont;
+Font fontMedium;
+Font fontBig;
+const char* endGameText;
+const char* controlsText = "[Click] to play, [Esc] to exit";
 
 int main(void) {
     Init();
     
-#if defined(PLATFORM_WEB)
-    emscripten_set_main_loop(UpdateDrawFrame, 0, 1);
-#else
     while (!WindowShouldClose()) {
         UpdateDrawFrame();
     }
-#endif
 
     Cleanup();
     return 0;
 }
 
+#include <stdio.h>
 void Init() {
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Shrunk!");
     SetWindowState(FLAG_VSYNC_HINT);
     screenDimensions = toggleGameFullscreen();
+    HideCursor();
     
     // Init audio device and create the sound loading threads
     InitAudioDevice();
@@ -96,20 +88,29 @@ void Init() {
     }
     loadedWaves[waveIndex] = LoadWave("resources/sounds/Echo.wav");
     SoundPool_LoadSoundFromWave(&echoSoundPool, loadedWaves[waveIndex], threads);
-    HideCursor();
+    
     initRandom();
     initColorPalettes();
     initLevelRadiusRanges();
     
-    fontSize = 72;
-    bigFontSize = fontSize * 6;
-    font = LoadFontEx("resources/fonts/Nunito/Nunito-Regular.ttf", fontSize, NULL, 0);
-    bigFont = LoadFontEx("resources/fonts/Quicksand/Quicksand-Bold.ttf", bigFontSize, NULL, 0);
+    fontMedium = LoadFontEx("resources/fonts/Nunito/Nunito-Regular.ttf", fontSizeMedium, NULL, 0);
+    fontBig = LoadFontEx("resources/fonts/Quicksand/Quicksand-Bold.ttf", fontSizeBig, NULL, 0);
 
+    game.currentColorPalette = colorPalettes[game.level / 10];
+    game.gameState = GAMESTATE_SHRUNK;
+    game.level = 0;
+    game.shrinkingSpeed = 0.0f;
+    endGameText = "Shrunk";
+    
+    float circleRadius = levelCircleRadiusRanges[0].max;
     circleTexture = LoadTexture("resources/textures/circle.png");
     SetTextureFilter(circleTexture, TEXTURE_FILTER_TRILINEAR);
-    game.playerCircle = (Circle) { .texture = circleTexture };
     game.targetCircle = (Circle) { .texture = circleTexture };
+    game.playerCircle = (Circle) { 
+        .texture = circleTexture,
+        .radius = circleRadius,
+        .color = ColorAlpha(game.currentColorPalette.foreground, 0.5f)
+    };
     
     ThreadList_Join(threads);
     ThreadList_Delete(threads);
@@ -117,8 +118,6 @@ void Init() {
         UnloadWave(loadedWaves[i]);
     }
     RandomNotePlayer_Init(kalimbaSoundPools);
-    
-    startGame();
 }
 
 void Cleanup() {
@@ -127,8 +126,8 @@ void Cleanup() {
     }
     SoundPool_UnloadSound(&echoSoundPool);
     UnloadTexture(circleTexture);
-    UnloadFont(font);
-    UnloadFont(bigFont);
+    UnloadFont(fontMedium);
+    UnloadFont(fontBig);
 
     CloseAudioDevice();
     CloseWindow();
@@ -165,10 +164,10 @@ void UpdateDrawFrame() {
         ClearBackground(game.currentColorPalette.background);
         drawCircle(game.playerCircle);
         drawCircle(game.targetCircle);
-        Vector2 textSize = MeasureTextEx(bigFont, TextFormat("%d", game.level), bigFontSize, 0);
+        Vector2 textSize = MeasureTextEx(fontBig, TextFormat("%d", game.level), fontSizeBig, 0);
         Vector2 textPosition = (Vector2) { .x = screenDimensions.width / 2 - textSize.x / 2, .y = screenDimensions.height / 2 - textSize.y / 2};
         Color textColor = ColorAlpha(game.currentColorPalette.foreground, 0.125f);
-        DrawTextEx(bigFont, TextFormat("%d", game.level), textPosition, bigFontSize, 0, textColor);
+        DrawTextEx(fontBig, TextFormat("%d", game.level), textPosition, fontSizeBig, 0, textColor);
         EndDrawing();
     } else {
         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
@@ -178,10 +177,19 @@ void UpdateDrawFrame() {
         BeginDrawing();
         ClearBackground(game.currentColorPalette.background);
         drawCircle(game.playerCircle);
-        Vector2 textSize = MeasureTextEx(font, game.endGameText, fontSize, 0);
-        Vector2 textPosition = (Vector2) { .x = screenDimensions.width / 2 - textSize.x / 2, .y = screenDimensions.height / 2 - textSize.y / 2};
-        Color textColor = ColorAlpha(game.currentColorPalette.foreground, 0.75f);
-        DrawTextEx(font, game.endGameText, textPosition, fontSize, 0, textColor);
+        Vector2 endTextSize = MeasureTextEx(fontMedium, endGameText, fontSizeMedium, 0);
+        Vector2 endTextPosition = (Vector2) { .x = screenDimensions.width / 2 - endTextSize.x / 2, .y = screenDimensions.height / 2 - endTextSize.y / 2};
+        Color endTextColor = ColorAlpha(game.currentColorPalette.foreground, 0.75f);
+        DrawTextEx(fontMedium, endGameText, endTextPosition, fontSizeMedium, 0, endTextColor);
+        
+        Vector2 controlsTextSize = MeasureTextEx(fontMedium, controlsText, fontSizeMedium, 0);
+        Vector2 controlsTextPosition = (Vector2) { 
+            .x = screenDimensions.width / 2 - controlsTextSize.x / 2, 
+            .y = screenDimensions.height - controlsTextSize.y - screenDimensions.height / 48 
+        };
+        Color controlsTextColor = ColorAlpha(game.currentColorPalette.foreground, 0.25f);
+        DrawTextEx(fontMedium, controlsText, controlsTextPosition, fontSizeMedium, 0, controlsTextColor);
+        
         EndDrawing();
     }
 }
@@ -235,11 +243,11 @@ void endGame(GameState newGameState) {
     double gameTime = GetTime() - game.gameStartTime;
     game.gameState = newGameState;
     if (game.gameState == GAMESTATE_WON) {
-        game.endGameText = TextFormat("You won in %.2f seconds!", gameTime);
+        endGameText = TextFormat("You won in %.2f seconds!", gameTime);
     } else if (game.gameState == GAMESTATE_SHRUNK) {
-        game.endGameText = TextFormat("Shrunk!");
+        endGameText = TextFormat("Shrunk!");
     } else if (game.gameState == GAMESTATE_MISSED) {
-        game.endGameText = TextFormat("Missed!");
+        endGameText = TextFormat("Missed!");
     }
 }
 
