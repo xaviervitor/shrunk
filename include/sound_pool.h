@@ -15,6 +15,6 @@ typedef struct {
 
 void SoundPool_LoadSoundFromWave(SoundPool* self, Wave wave, ThreadList* threads);
 
-void SoundPool_UnloadSound(SoundPool* soundPool);
+void SoundPool_UnloadSound(SoundPool* self);
 
-void SoundPool_PlaySound(SoundPool* soundPool, float pitch);
+void SoundPool_PlaySound(SoundPool* self, float pitch);

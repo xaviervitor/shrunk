@@ -5,6 +5,7 @@
 #include "random_note_player.h"
 #include "sound_pool.h"
 #include "thread_list.h"
+#include "text.h"
 
 #define LEVEL_RANGES_LENGTH 9
 #define COLOR_PALETTES_LENGTH 5
@@ -37,13 +38,11 @@ void UpdateDrawFrame(void);
 void startGame(void);
 void advanceLevel(void);
 void endGame(GameState won);
+void updateUI(void);
 void initLevelRadiusRanges(void);
 void initColorPalettes(void);
     
-Dimensions screenDimensions = (Dimensions) { 
-    .width = SCREEN_WIDTH, 
-    .height = SCREEN_HEIGHT
-};
+Dimensions screenDimensions;
 int fontSizeMedium = 72;
 int fontSizeBig = 432; // 72 * 6
 Game game;
@@ -54,8 +53,9 @@ SoundPool echoSoundPool;
 Texture2D circleTexture;
 Font fontMedium;
 Font fontBig;
-const char* endGameText;
-const char* controlsText = "[Click] to play, [Esc] to exit";
+Text controlsText;
+Text endText;
+Text scoreText;
 
 int main(void) {
     Init();
@@ -73,6 +73,7 @@ void Init() {
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Shrunk!");
     SetWindowState(FLAG_VSYNC_HINT);
     screenDimensions = toggleGameFullscreen();
+    
     HideCursor();
     
     // Init audio device and create the sound loading threads
@@ -92,15 +93,35 @@ void Init() {
     initRandom();
     initColorPalettes();
     initLevelRadiusRanges();
-    
-    fontMedium = LoadFontEx("resources/fonts/Nunito/Nunito-Regular.ttf", fontSizeMedium, NULL, 0);
-    fontBig = LoadFontEx("resources/fonts/Quicksand/Quicksand-Bold.ttf", fontSizeBig, NULL, 0);
 
     game.currentColorPalette = colorPalettes[game.level / 10];
     game.gameState = GAMESTATE_SHRUNK;
     game.level = 0;
     game.shrinkingSpeed = 0.0f;
-    endGameText = "Shrunk";
+    
+    fontMedium = LoadFontEx("resources/fonts/Nunito/Nunito-Regular.ttf", fontSizeMedium, NULL, 0);
+    fontBig = LoadFontEx("resources/fonts/Quicksand/Quicksand-Bold.ttf", fontSizeBig, NULL, 0);
+
+    Text_InitText(&controlsText,
+        &screenDimensions,
+        &fontMedium, 
+        "[Click] to play, [Esc] to exit",
+        ALIGN_CENTER_BOTTOM,
+        ColorAlpha(game.currentColorPalette.foreground, 0.25f));
+
+    Text_InitText(&endText,
+        &screenDimensions,
+        &fontMedium, 
+        "Shrunk",
+        ALIGN_CENTER,
+        ColorAlpha(game.currentColorPalette.foreground, 0.75f));
+
+    Text_InitText(&scoreText,
+        &screenDimensions,
+        &fontBig, 
+        TextFormat("%d", game.level),
+        ALIGN_CENTER,
+        ColorAlpha(game.currentColorPalette.foreground, 0.125f));
     
     float circleRadius = levelCircleRadiusRanges[0].max;
     circleTexture = LoadTexture("resources/textures/circle.png");
@@ -136,6 +157,7 @@ void Cleanup() {
 void UpdateDrawFrame() {
     if (IsKeyPressed(KEY_F11) || (IsKeyPressed(KEY_ENTER) && (IsKeyDown(KEY_LEFT_ALT) || IsKeyDown(KEY_RIGHT_ALT)))) {
         screenDimensions = toggleGameFullscreen();
+        updateUI();
     }
     if (IsCursorOnScreen())
         game.playerCircle.position = GetMousePosition();
@@ -164,10 +186,8 @@ void UpdateDrawFrame() {
         ClearBackground(game.currentColorPalette.background);
         drawCircle(game.playerCircle);
         drawCircle(game.targetCircle);
-        Vector2 textSize = MeasureTextEx(fontBig, TextFormat("%d", game.level), fontSizeBig, 0);
-        Vector2 textPosition = (Vector2) { .x = screenDimensions.width / 2 - textSize.x / 2, .y = screenDimensions.height / 2 - textSize.y / 2};
-        Color textColor = ColorAlpha(game.currentColorPalette.foreground, 0.125f);
-        DrawTextEx(fontBig, TextFormat("%d", game.level), textPosition, fontSizeBig, 0, textColor);
+        Text_DrawText(scoreText);
+
         EndDrawing();
     } else {
         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
@@ -177,19 +197,8 @@ void UpdateDrawFrame() {
         BeginDrawing();
         ClearBackground(game.currentColorPalette.background);
         drawCircle(game.playerCircle);
-        Vector2 endTextSize = MeasureTextEx(fontMedium, endGameText, fontSizeMedium, 0);
-        Vector2 endTextPosition = (Vector2) { .x = screenDimensions.width / 2 - endTextSize.x / 2, .y = screenDimensions.height / 2 - endTextSize.y / 2};
-        Color endTextColor = ColorAlpha(game.currentColorPalette.foreground, 0.75f);
-        DrawTextEx(fontMedium, endGameText, endTextPosition, fontSizeMedium, 0, endTextColor);
-        
-        Vector2 controlsTextSize = MeasureTextEx(fontMedium, controlsText, fontSizeMedium, 0);
-        Vector2 controlsTextPosition = (Vector2) { 
-            .x = screenDimensions.width / 2 - controlsTextSize.x / 2, 
-            .y = screenDimensions.height - controlsTextSize.y - screenDimensions.height / 48 
-        };
-        Color controlsTextColor = ColorAlpha(game.currentColorPalette.foreground, 0.25f);
-        DrawTextEx(fontMedium, controlsText, controlsTextPosition, fontSizeMedium, 0, controlsTextColor);
-        
+        Text_DrawText(endText);
+        Text_DrawText(controlsText);
         EndDrawing();
     }
 }
@@ -197,7 +206,10 @@ void UpdateDrawFrame() {
 void startGame() {
     game.gameState = GAMESTATE_PLAYING;
     game.level = 1;
+    scoreText.text = TextFormat("%d", game.level);
+    Text_Update(&scoreText);
     game.currentColorPalette = colorPalettes[game.level / 10];
+    scoreText.color = ColorAlpha(game.currentColorPalette.foreground, 0.125f);
     float circleRadius = levelCircleRadiusRanges[0].max;
     
     game.playerCircle.radius = circleRadius;
@@ -221,9 +233,12 @@ void advanceLevel() {
         RandomNotePlayer_RandomizeMode();
     }
     game.level++;
+    scoreText.text = TextFormat("%d", game.level);
+    Text_Update(&scoreText);
 
     game.shrinkingSpeed += 1.0f;
     game.currentColorPalette = colorPalettes[game.level / 10];
+    scoreText.color = ColorAlpha(game.currentColorPalette.foreground, 0.125f);
 
     Range levelRange = levelCircleRadiusRanges[game.level / 5];
     float randomRadius = GetRandomValueF(levelRange.min, levelRange.max);
@@ -243,12 +258,21 @@ void endGame(GameState newGameState) {
     double gameTime = GetTime() - game.gameStartTime;
     game.gameState = newGameState;
     if (game.gameState == GAMESTATE_WON) {
-        endGameText = TextFormat("You won in %.2f seconds!", gameTime);
+        endText.text = TextFormat("You won in %.2f seconds!", gameTime);
     } else if (game.gameState == GAMESTATE_SHRUNK) {
-        endGameText = TextFormat("Shrunk!");
+        endText.text = TextFormat("Shrunk!");
     } else if (game.gameState == GAMESTATE_MISSED) {
-        endGameText = TextFormat("Missed!");
+        endText.text = TextFormat("Missed!");
     }
+    Text_Update(&endText);
+    endText.color = ColorAlpha(game.currentColorPalette.foreground, 0.75f);
+    controlsText.color = ColorAlpha(game.currentColorPalette.foreground, 0.25f);
+}
+
+void updateUI() {
+    Text_Update(&scoreText);
+    Text_Update(&controlsText);
+    Text_Update(&endText);
 }
 
 void initColorPalettes() {
@@ -270,7 +294,7 @@ void initLevelRadiusRanges() {
     int value = 150;
     for (int i = 0 ; i < LEVEL_RANGES_LENGTH - 1 ; i++) {
         levelCircleRadiusRanges[i].max = value;
-        value -= 15;
+        value -= 13.5;
         levelCircleRadiusRanges[i].min = value;
     }
     // In level 40 specifically, the radius is set to 30, the smallest
