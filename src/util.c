@@ -5,6 +5,8 @@
 #include <math.h>
 #include "raylib.h"
 
+extern Dimensions screenDimensions;
+
 void drawCircle(Circle circle) {
     Rectangle source = (Rectangle) { .x = 0.0f, .y = 0.0f, .width = circle.texture.width, .height = circle.texture.height };
     Rectangle dest = (Rectangle) { .x = circle.position.x, .y = circle.position.y, .width = circle.radius * 2, .height = circle.radius * 2 };
@@ -12,7 +14,7 @@ void drawCircle(Circle circle) {
     DrawTexturePro(circle.texture, source, dest, origin, 0, circle.color);
 }
 
-Dimensions toggleGameFullscreen() {
+void setWindowFullscreen() {
     Dimensions newDimensions;
     if (IsWindowFullscreen()) {
         newDimensions.width = SCREEN_WIDTH;
@@ -24,7 +26,7 @@ Dimensions toggleGameFullscreen() {
     }
     ToggleFullscreen();
     SetWindowSize(newDimensions.width, newDimensions.height);
-    return newDimensions;
+    screenDimensions = newDimensions;
 }
 
 void initRandom() {

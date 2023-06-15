@@ -9,7 +9,6 @@ typedef enum {
 } Alignment;
 
 typedef struct Text {
-    Dimensions* screenDimensions;
     Font* font;
     const char* text;
     Vector2 position;
@@ -19,7 +18,7 @@ typedef struct Text {
 } Text;
 
 
-void Text_InitText(Text* text, Dimensions* screenDimensions, Font* font, const char* str, Alignment alignment, Color color);
+void Text_InitText(Text* text, Font* font, const char* str, Alignment alignment, Color color);
 
 void Text_Update(Text* text);
 

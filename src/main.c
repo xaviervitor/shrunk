@@ -1,5 +1,6 @@
 #include <math.h>
 #include <time.h>
+#include <stdbool.h>
 #include "raylib.h"
 #include "util.h"
 #include "random_note_player.h"
@@ -14,15 +15,8 @@
 
 #define MAX_LEVEL 40
 
-typedef enum {
-    GAMESTATE_PLAYING,
-    GAMESTATE_WON,
-    GAMESTATE_SHRUNK,
-    GAMESTATE_MISSED
-} GameState;
-
 typedef struct Game {
-    GameState gameState;
+    bool playing;
     double gameStartTime;
     int level;
     ColorPalette currentColorPalette;
@@ -37,14 +31,11 @@ void UpdateDrawFrame(void);
 
 void startGame(void);
 void advanceLevel(void);
-void endGame(GameState won);
-void updateUI(void);
+void endGame(const char* text);
 void initLevelRadiusRanges(void);
 void initColorPalettes(void);
     
 Dimensions screenDimensions;
-int fontSizeMedium = 72;
-int fontSizeBig = 432; // 72 * 6
 Game game;
 Range levelCircleRadiusRanges[LEVEL_RANGES_LENGTH];
 ColorPalette colorPalettes[COLOR_PALETTES_LENGTH];
@@ -59,24 +50,19 @@ Text scoreText;
 
 int main(void) {
     Init();
-    
     while (!WindowShouldClose()) {
         UpdateDrawFrame();
     }
-
     Cleanup();
     return 0;
 }
 
-#include <stdio.h>
 void Init() {
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Shrunk!");
     SetWindowState(FLAG_VSYNC_HINT);
-    screenDimensions = toggleGameFullscreen();
-    
+    setWindowFullscreen();
     HideCursor();
     
-    // Init audio device and create the sound loading threads
     InitAudioDevice();
 
     Wave loadedWaves[LOADED_WAVES_LENGTH];
@@ -95,29 +81,26 @@ void Init() {
     initLevelRadiusRanges();
 
     game.currentColorPalette = colorPalettes[game.level / 10];
-    game.gameState = GAMESTATE_SHRUNK;
+    game.playing = false;
     game.level = 0;
     game.shrinkingSpeed = 0.0f;
     
-    fontMedium = LoadFontEx("resources/fonts/Nunito/Nunito-Regular.ttf", fontSizeMedium, NULL, 0);
-    fontBig = LoadFontEx("resources/fonts/Quicksand/Quicksand-Bold.ttf", fontSizeBig, NULL, 0);
+    fontMedium = LoadFontEx("resources/fonts/Nunito/Nunito-Regular.ttf", 72, NULL, 0);
+    fontBig = LoadFontEx("resources/fonts/Quicksand/Quicksand-Bold.ttf", fontMedium.baseSize * 6, NULL, 0);
 
     Text_InitText(&controlsText,
-        &screenDimensions,
         &fontMedium, 
         "[Click] to play, [Esc] to exit",
         ALIGN_CENTER_BOTTOM,
         ColorAlpha(game.currentColorPalette.foreground, 0.25f));
 
     Text_InitText(&endText,
-        &screenDimensions,
         &fontMedium, 
         "Shrunk",
         ALIGN_CENTER,
         ColorAlpha(game.currentColorPalette.foreground, 0.75f));
 
     Text_InitText(&scoreText,
-        &screenDimensions,
         &fontBig, 
         TextFormat("%d", game.level),
         ALIGN_CENTER,
@@ -155,23 +138,19 @@ void Cleanup() {
 }
 
 void UpdateDrawFrame() {
-    if (IsKeyPressed(KEY_F11) || (IsKeyPressed(KEY_ENTER) && (IsKeyDown(KEY_LEFT_ALT) || IsKeyDown(KEY_RIGHT_ALT)))) {
-        screenDimensions = toggleGameFullscreen();
-        updateUI();
-    }
     if (IsCursorOnScreen())
         game.playerCircle.position = GetMousePosition();
 
-    if (game.gameState == GAMESTATE_PLAYING) {
+    if (game.playing) {
         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
             bool collision = CheckCollisionCircles(game.playerCircle.position, game.playerCircle.radius, game.targetCircle.position, game.targetCircle.radius);
             if (collision) {
                 advanceLevel();
                 if (game.level > MAX_LEVEL) {
-                    endGame(GAMESTATE_WON);
+                    endGame(TextFormat("You won in %.2f seconds!", GetTime() - game.gameStartTime));
                 }
             } else {
-                endGame(GAMESTATE_MISSED);
+                endGame("Missed!");
             }
         }
 
@@ -180,7 +159,7 @@ void UpdateDrawFrame() {
         game.targetCircle.radius -= game.shrinkingSpeed * deltaTime;
 
         if (game.playerCircle.radius <= 0.0f) {
-            endGame(GAMESTATE_SHRUNK);
+            endGame("Shrunk!");
         }
         BeginDrawing();
         ClearBackground(game.currentColorPalette.background);
@@ -204,7 +183,7 @@ void UpdateDrawFrame() {
 }
 
 void startGame() {
-    game.gameState = GAMESTATE_PLAYING;
+    game.playing = true;
     game.level = 1;
     scoreText.text = TextFormat("%d", game.level);
     Text_Update(&scoreText);
@@ -254,25 +233,12 @@ void advanceLevel() {
     };
 }
 
-void endGame(GameState newGameState) {
-    double gameTime = GetTime() - game.gameStartTime;
-    game.gameState = newGameState;
-    if (game.gameState == GAMESTATE_WON) {
-        endText.text = TextFormat("You won in %.2f seconds!", gameTime);
-    } else if (game.gameState == GAMESTATE_SHRUNK) {
-        endText.text = TextFormat("Shrunk!");
-    } else if (game.gameState == GAMESTATE_MISSED) {
-        endText.text = TextFormat("Missed!");
-    }
+void endGame(const char* text) {
+    game.playing = false;
+    endText.text = text;
     Text_Update(&endText);
     endText.color = ColorAlpha(game.currentColorPalette.foreground, 0.75f);
     controlsText.color = ColorAlpha(game.currentColorPalette.foreground, 0.25f);
-}
-
-void updateUI() {
-    Text_Update(&scoreText);
-    Text_Update(&controlsText);
-    Text_Update(&endText);
 }
 
 void initColorPalettes() {

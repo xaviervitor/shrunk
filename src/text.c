@@ -2,8 +2,9 @@
 
 #include "util.h"
 
-void Text_InitText(Text* text, Dimensions* screenDimensions, Font* font, const char* str, Alignment alignment, Color color) {
-    text->screenDimensions = screenDimensions;
+extern Dimensions screenDimensions;
+
+void Text_InitText(Text* text, Font* font, const char* str, Alignment alignment, Color color) {
     text->font = font;
     text->text = str;
     text->alignment = alignment;
@@ -15,13 +16,13 @@ void Text_Update(Text* text) {
     text->size = MeasureTextEx(*(text->font), text->text, text->font->baseSize, 0);
     if (text->alignment == ALIGN_CENTER) {
         text->position = (Vector2) {
-            .x = text->screenDimensions->width / 2 - text->size.x / 2, 
-            .y = text->screenDimensions->height / 2 - text->size.y / 2
+            .x = screenDimensions.width / 2 - text->size.x / 2, 
+            .y = screenDimensions.height / 2 - text->size.y / 2
         };
     } else if (text->alignment == ALIGN_CENTER_BOTTOM) {
         text->position = (Vector2) { 
-            .x = text->screenDimensions->width / 2 - text->size.x / 2, 
-            .y = text->screenDimensions->height - text->size.y
+            .x = screenDimensions.width / 2 - text->size.x / 2, 
+            .y = screenDimensions.height - text->size.y
         };
     }
 }

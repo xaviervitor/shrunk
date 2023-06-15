@@ -3,8 +3,8 @@
 #include "raylib.h"
 
 #define RAYLIB_RAND_MAX 32767
-#define SCREEN_WIDTH 800
-#define SCREEN_HEIGHT 600
+#define SCREEN_WIDTH 1600
+#define SCREEN_HEIGHT 900
 
 typedef struct Dimensions {
     int width;
@@ -30,7 +30,7 @@ typedef struct Range {
 
 void drawCircle(Circle circle);
 
-Dimensions toggleGameFullscreen(void);
+void toggleGameFullscreen(void);
 
 void initRandom(void);
 
