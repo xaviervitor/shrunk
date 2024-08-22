@@ -50,7 +50,5 @@ clean:
 	@echo "rm objects"
 	@rm -f $(depends)
 	@echo "rm depends"
-	@rm -f $(libs)
-	@echo "rm libs"
 
 .PHONY: all run clean
