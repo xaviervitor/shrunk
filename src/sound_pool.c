@@ -5,6 +5,8 @@
 #include "raylib.h"
 #include "thread_list.h"
 
+void* loadSoundThread(void* _threadInfo);
+
 typedef struct ThreadInfo {
     SoundPool* soundPool;
     Wave wave;

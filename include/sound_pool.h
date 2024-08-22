@@ -5,7 +5,7 @@
 
 #define SOUNDPOOL_LENGTH 8
 
-// Used to play the same sound in many "channels" 
+// Used to play the same sound in many "channels"
 // simultaneously. The max number of sounds playing
 // at the same time is SOUNDPOOL_LENGTH
 typedef struct {

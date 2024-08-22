@@ -13,9 +13,7 @@
 #define MODES_LENGTH 4
 #define MODE_NOTES_LENGTH 22
 
-void RandomNotePlayer_PlayNote(Note note);
-void RandomNotePlayer_InitNotes(SoundPool octavesSoundPools[]);
-void RandomNotePlayer_InitModes(void);
+float calculatePitch(int note);
 
 typedef enum {
     NOTE_DO_4 = 0,
@@ -56,7 +54,7 @@ typedef enum {
     NOTE_LA_6,
     NOTE_LA_SHARP_6,
     NOTE_SI_6,
-    
+
     NOTE_DO_7
 } Notes;
 
@@ -108,7 +106,7 @@ void RandomNotePlayer_RandomizeMode() {
     } while (currentMode == previousMode);
 }
 
-inline float calculatePitch(int note) {
+float calculatePitch(int note) {
     return pow(2, ((float) note / (float) 12));
 }
 
@@ -116,9 +114,9 @@ void RandomNotePlayer_InitNotes(SoundPool octavesSoundPools[]) {
     int notesArrayIndex = 0;
     for (int octaveIndex = 0 ; octaveIndex < OCTAVES ; octaveIndex++) {
         for (int noteIndex = 0 ; noteIndex < NOTES_IN_OCTAVE ; noteIndex++) {
-            notes[notesArrayIndex] = (Note) { 
-                .soundPool = &octavesSoundPools[octaveIndex], 
-                .pitch = calculatePitch(noteIndex) 
+            notes[notesArrayIndex] = (Note) {
+                .soundPool = &octavesSoundPools[octaveIndex],
+                .pitch = calculatePitch(noteIndex)
             };
             notesArrayIndex++;
         }
@@ -134,7 +132,7 @@ void RandomNotePlayer_InitModes() {
         MODE_MIXOLYDIAN,
         MODE_LOCRIAN
     };
-    
+
     // Ionian
     int noteIndex = 0;
     modes[MODE_IONIAN][noteIndex++] = notes[NOTE_DO_4];
@@ -144,7 +142,7 @@ void RandomNotePlayer_InitModes() {
     modes[MODE_IONIAN][noteIndex++] = notes[NOTE_SOL_4];
     modes[MODE_IONIAN][noteIndex++] = notes[NOTE_LA_4];
     modes[MODE_IONIAN][noteIndex++] = notes[NOTE_SI_4];
-    
+
     modes[MODE_IONIAN][noteIndex++] = notes[NOTE_DO_5];
     modes[MODE_IONIAN][noteIndex++] = notes[NOTE_RE_5];
     modes[MODE_IONIAN][noteIndex++] = notes[NOTE_MI_5];
@@ -160,7 +158,7 @@ void RandomNotePlayer_InitModes() {
     modes[MODE_IONIAN][noteIndex++] = notes[NOTE_SOL_6];
     modes[MODE_IONIAN][noteIndex++] = notes[NOTE_LA_6];
     modes[MODE_IONIAN][noteIndex++] = notes[NOTE_SI_6];
-    
+
     modes[MODE_IONIAN][noteIndex++] = notes[NOTE_DO_7]; // noteIndex = 21
 
     // Dorian
@@ -172,7 +170,7 @@ void RandomNotePlayer_InitModes() {
     modes[MODE_DORIAN][noteIndex++] = notes[NOTE_SOL_4];
     modes[MODE_DORIAN][noteIndex++] = notes[NOTE_LA_4];
     modes[MODE_DORIAN][noteIndex++] = notes[NOTE_LA_SHARP_4];
-    
+
     modes[MODE_DORIAN][noteIndex++] = notes[NOTE_DO_5];
     modes[MODE_DORIAN][noteIndex++] = notes[NOTE_RE_5];
     modes[MODE_DORIAN][noteIndex++] = notes[NOTE_RE_SHARP_5];
@@ -236,7 +234,7 @@ void RandomNotePlayer_InitModes() {
     modes[MODE_LOCRIAN][noteIndex++] = notes[NOTE_FA_SHARP_5];
     modes[MODE_LOCRIAN][noteIndex++] = notes[NOTE_SOL_SHARP_5];
     modes[MODE_LOCRIAN][noteIndex++] = notes[NOTE_LA_SHARP_5];
-        
+
     modes[MODE_LOCRIAN][noteIndex++] = notes[NOTE_DO_6];
     modes[MODE_LOCRIAN][noteIndex++] = notes[NOTE_DO_SHARP_6];
     modes[MODE_LOCRIAN][noteIndex++] = notes[NOTE_RE_SHARP_6];

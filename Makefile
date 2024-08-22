@@ -1,13 +1,56 @@
-all: main
+project_name := shrunk
+output := $(project_name).exe
 
-main:
-# RELEASE
-	windres shrunk.rc -o build/shrunk.rc.data --target=pe-x86-64
-	gcc -o build/Shrunk.exe src/*.c build/shrunk.rc.data -Wall -Wextra -O2 -std=c17 -Wno-missing-braces -Werror=implicit-function-declaration -mwindows -I include/ -L lib/ -lraylib -lopengl32 -lgdi32 -lwinmm
-# DEBUG
-#	gcc -o build/Shrunk.exe src/*.c tests/*.c -g -Og -Wall -Wextra -O2 -std=c17 -Wno-missing-braces -Werror=implicit-function-declaration -I include/ -L lib/ -lraylib -lopengl32 -lgdi32 -lwinmm
+all: $(output)
 
-run: main
-	./build/Shrunk.exe
+# compile variables
+cc := gcc
+std := -std=c17
+warnings := -Wall -Wextra -pedantic -Wcast-align -Wcast-qual -Wdisabled-optimization -Winit-self \
+-Wlogical-op -Wmissing-declarations -Wmissing-include-dirs -Wredundant-decls -Wshadow \
+-Wsign-conversion -Wswitch-default -Wundef -Wno-unused
 
-.PHONY: all run
+# build flags
+build_flags.debug := -O0 -ggdb3
+build_flags.release := -O3 -mwindows
+extra_flags := ${build_flags.${build}}
+
+# get all src/*.c
+sources := $(wildcard src/*.c)
+# create a list of build/%.o based on sources list
+objects := $(patsubst src/%.c, build/%.o, $(sources))
+# create a list of build/%.d based on sources list
+depends := $(patsubst src/%.c, build/%.d, $(sources))
+
+# link all compiled objects
+$(output): $(objects) build/$(project_name).rc.data
+	@$(cc) $^ -o $@ $(std) $(warnings) $(extra_flags) \
+	-L lib/ -lraylib -lopengl32 -lgdi32 -lwinmm
+	@echo $@
+
+-include $(depends)
+
+# build all src/%.c to build/%.o
+build/%.o: src/%.c Makefile
+	@$(cc) -c $< -o $@ $(std) $(warnings) $(extra_flags) -MMD -MP -I include/
+	@echo "$< > $@"
+
+# make project icon
+build/$(project_name).rc.data: resources/icon/$(project_name).rc
+	@windres $^ -o $@ --target=pe-x86-64
+	@echo "windres $^ > $@"
+
+run: $(output)
+	./$(output)
+
+clean:
+	@rm -f $(output)
+	@echo "rm output"
+	@rm -f $(objects)
+	@echo "rm objects"
+	@rm -f $(depends)
+	@echo "rm depends"
+	@rm -f $(libs)
+	@echo "rm libs"
+
+.PHONY: all run clean

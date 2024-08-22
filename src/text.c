@@ -16,12 +16,12 @@ void Text_Update(Text* text) {
     text->size = MeasureTextEx(*(text->font), text->text, text->font->baseSize, 0);
     if (text->alignment == ALIGN_CENTER) {
         text->position = (Vector2) {
-            .x = screenDimensions.width / 2 - text->size.x / 2, 
+            .x = screenDimensions.width / 2 - text->size.x / 2,
             .y = screenDimensions.height / 2 - text->size.y / 2
         };
     } else if (text->alignment == ALIGN_CENTER_BOTTOM) {
-        text->position = (Vector2) { 
-            .x = screenDimensions.width / 2 - text->size.x / 2, 
+        text->position = (Vector2) {
+            .x = screenDimensions.width / 2 - text->size.x / 2,
             .y = screenDimensions.height - text->size.y
         };
     }

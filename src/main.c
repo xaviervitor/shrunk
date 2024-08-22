@@ -34,8 +34,8 @@ void advanceLevel(void);
 void endGame(const char* text);
 void initLevelRadiusRanges(void);
 void initColorPalettes(void);
-    
-Dimensions screenDimensions;
+
+Dimensions screenDimensions = { .width = SCREEN_WIDTH, .height = SCREEN_HEIGHT };
 Game game;
 Range levelCircleRadiusRanges[LEVEL_RANGES_LENGTH];
 ColorPalette colorPalettes[COLOR_PALETTES_LENGTH];
@@ -60,9 +60,9 @@ int main(void) {
 void Init() {
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Shrunk!");
     SetWindowState(FLAG_VSYNC_HINT);
-    setWindowFullscreen();
+    toggleWindowFullscreen();
     HideCursor();
-    
+
     InitAudioDevice();
 
     Wave loadedWaves[LOADED_WAVES_LENGTH];
@@ -75,7 +75,7 @@ void Init() {
     }
     loadedWaves[waveIndex] = LoadWave("resources/sounds/Echo.wav");
     SoundPool_LoadSoundFromWave(&echoSoundPool, loadedWaves[waveIndex], threads);
-    
+
     initRandom();
     initColorPalettes();
     initLevelRadiusRanges();
@@ -84,38 +84,38 @@ void Init() {
     game.playing = false;
     game.level = 0;
     game.shrinkingSpeed = 0.0f;
-    
+
     fontMedium = LoadFontEx("resources/fonts/Nunito/Nunito-Regular.ttf", 72, NULL, 0);
     fontBig = LoadFontEx("resources/fonts/Quicksand/Quicksand-Bold.ttf", fontMedium.baseSize * 6, NULL, 0);
 
     Text_InitText(&controlsText,
-        &fontMedium, 
+        &fontMedium,
         "[Click] to play, [Esc] to exit",
         ALIGN_CENTER_BOTTOM,
         ColorAlpha(game.currentColorPalette.foreground, 0.25f));
 
     Text_InitText(&endText,
-        &fontMedium, 
+        &fontMedium,
         "Shrunk",
         ALIGN_CENTER,
         ColorAlpha(game.currentColorPalette.foreground, 0.75f));
 
     Text_InitText(&scoreText,
-        &fontBig, 
+        &fontBig,
         TextFormat("%d", game.level),
         ALIGN_CENTER,
         ColorAlpha(game.currentColorPalette.foreground, 0.125f));
-    
+
     float circleRadius = levelCircleRadiusRanges[0].max;
     circleTexture = LoadTexture("resources/textures/circle.png");
     SetTextureFilter(circleTexture, TEXTURE_FILTER_TRILINEAR);
     game.targetCircle = (Circle) { .texture = circleTexture };
-    game.playerCircle = (Circle) { 
+    game.playerCircle = (Circle) {
         .texture = circleTexture,
         .radius = circleRadius,
         .color = ColorAlpha(game.currentColorPalette.foreground, 0.5f)
     };
-    
+
     ThreadList_Join(threads);
     ThreadList_Delete(threads);
     for (int i = 0 ; i < LOADED_WAVES_LENGTH ; i++) {
@@ -140,6 +140,10 @@ void Cleanup() {
 void UpdateDrawFrame() {
     if (IsCursorOnScreen())
         game.playerCircle.position = GetMousePosition();
+
+    if (IsKeyPressed(KEY_F11) || (IsKeyPressed(KEY_ENTER) && (IsKeyDown(KEY_LEFT_ALT) || IsKeyDown(KEY_RIGHT_ALT)))) {
+        toggleWindowFullscreen();
+    }
 
     if (game.playing) {
         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
@@ -190,10 +194,10 @@ void startGame() {
     game.currentColorPalette = colorPalettes[game.level / 10];
     scoreText.color = ColorAlpha(game.currentColorPalette.foreground, 0.125f);
     float circleRadius = levelCircleRadiusRanges[0].max;
-    
+
     game.playerCircle.radius = circleRadius;
     game.playerCircle.color = ColorAlpha(game.currentColorPalette.foreground, 0.5f);
-    
+
     game.targetCircle.radius = circleRadius;
     game.targetCircle.color = ColorAlpha(game.currentColorPalette.foreground, 0.25f);
     game.targetCircle.position = (Vector2) { .x = screenDimensions.width / 2, .y = screenDimensions.height / 2};
@@ -228,7 +232,7 @@ void advanceLevel() {
     game.targetCircle.color = ColorAlpha(game.currentColorPalette.foreground, 0.25f);
     game.targetCircle.radius = randomRadius;
     game.targetCircle.position = (Vector2) {
-        .x = GetRandomValue(0, screenDimensions.width), 
+        .x = GetRandomValue(0, screenDimensions.width),
         .y = GetRandomValue(0, screenDimensions.height)
     };
 }

@@ -8,7 +8,7 @@
 
 void Tests_NoteProgression(const char* out, int maxLevel) {
     #define MODE_NOTES_LENGTH 22
-    
+
     float previousNote;
 
     int lines = 40;

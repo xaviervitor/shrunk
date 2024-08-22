@@ -30,7 +30,7 @@ typedef struct Range {
 
 void drawCircle(Circle circle);
 
-void setWindowFullscreen(void);
+void toggleWindowFullscreen(void);
 
 void initRandom(void);
 

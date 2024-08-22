@@ -14,19 +14,19 @@ void drawCircle(Circle circle) {
     DrawTexturePro(circle.texture, source, dest, origin, 0, circle.color);
 }
 
-void setWindowFullscreen() {
-    Dimensions newDimensions;
+void toggleWindowFullscreen() {
     if (IsWindowFullscreen()) {
-        newDimensions.width = SCREEN_WIDTH;
-        newDimensions.height = SCREEN_HEIGHT;
+        screenDimensions.width = SCREEN_WIDTH;
+        screenDimensions.height = SCREEN_HEIGHT;
+        ToggleFullscreen();
+        SetWindowSize(screenDimensions.width, screenDimensions.height);
     } else {
         int monitor = GetCurrentMonitor();
-        newDimensions.width = GetMonitorWidth(monitor);
-        newDimensions.height = GetMonitorHeight(monitor);
+        screenDimensions.width = GetMonitorWidth(monitor);
+        screenDimensions.height = GetMonitorHeight(monitor);
+        SetWindowSize(screenDimensions.width, screenDimensions.height);
+        ToggleFullscreen();
     }
-    ToggleFullscreen();
-    SetWindowSize(newDimensions.width, newDimensions.height);
-    screenDimensions = newDimensions;
 }
 
 void initRandom() {
