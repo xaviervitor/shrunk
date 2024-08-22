@@ -32,7 +32,7 @@ $(output): $(objects) build/$(project_name).rc.data
 
 # build all src/%.c to build/%.o
 build/%.o: src/%.c Makefile
-	@$(cc) -c $< -o $@ $(std) $(warnings) $(extra_flags) -MMD -MP -I include/
+	@$(cc) -c $< -o $@ $(std) $(warnings) $(extra_flags) -MMD -MP -I src/include/ -isystem include/
 	@echo "$< > $@"
 
 # make project icon
