@@ -28,8 +28,6 @@ typedef struct Range {
     int max;
 } Range;
 
-void drawCircle(Circle circle);
-
 void toggleWindowFullscreen(void);
 
 void initRandom(void);

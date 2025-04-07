@@ -32,6 +32,7 @@ void UpdateDrawFrame(void);
 void startGame(void);
 void advanceLevel(void);
 void endGame(const char* text);
+void drawCircle(Circle circle);
 void initLevelRadiusRanges(void);
 void initColorPalettes(void);
 
@@ -243,6 +244,13 @@ void endGame(const char* text) {
     Text_Update(&endText);
     endText.color = ColorAlpha(game.currentColorPalette.foreground, 0.75f);
     controlsText.color = ColorAlpha(game.currentColorPalette.foreground, 0.25f);
+}
+
+void drawCircle(Circle circle) {
+    Rectangle source = (Rectangle) { .x = 0.0f, .y = 0.0f, .width = circle.texture.width, .height = circle.texture.height };
+    Rectangle dest = (Rectangle) { .x = circle.position.x, .y = circle.position.y, .width = circle.radius * 2, .height = circle.radius * 2 };
+    Vector2 origin = (Vector2) { .x = circle.radius, .y = circle.radius };
+    DrawTexturePro(circle.texture, source, dest, origin, 0, circle.color);
 }
 
 void initColorPalettes() {
